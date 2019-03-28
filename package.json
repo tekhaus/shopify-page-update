@@ -1,0 +1,14 @@
+{
+  "name": "shopify-page-update",
+  "version": "1.0.0",
+  "description": "App to watch for changes to HTML files and update corresponding shopify pages",
+  "main": "index.js",
+  "author": "Tekhaus",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "axios": "^0.18.0",
+    "chokidar": "^2.1.5",
+    "dotenv": "^7.0.0"
+  }
+}
