@@ -7,6 +7,8 @@ require('dotenv').config({ path: __dirname + '/.env' })
 const fs = require('fs').promises
 const chokidar = require('chokidar')
 const axios = require("axios")
+const colors = require('colors')
+const { DateTime } = require('luxon')
 
 const {
   SHOPIFY_APP_KEY,
@@ -27,15 +29,9 @@ const watcher = chokidar.watch(`*.html`, {
  
 const log = console.log.bind(console)
 
-watcher
-  .on('ready', () => log(`SHOPIFY PAGE UPDATE running... watching ${process.cwd()} for updates`))
-  .on('error', error => log(`Watcher error: ${error}`))
-  .on('change', file => {
-    log(`File ${file} has been changed`)
-    processFile(file)
-  })
+const getTime = () => DateTime.local().setZone("America/Los_Angeles").toLocaleString(DateTime.TIME_WITH_SECONDS)
 
-async function getPageId (handle) {
+const getPageId = async (handle) => {
   const res = await axios.get(`${storeAccess}/admin/pages.json`, {
     params: {
       handle,
@@ -49,7 +45,7 @@ async function getPageId (handle) {
   }
 }
 
-async function updatePage (id, body_html) {
+const updatePage = async (id, body_html) => {
   const res = await axios.put(`${storeAccess}/admin/pages/${id}.json`, {
     page: {
       id,
@@ -57,15 +53,27 @@ async function updatePage (id, body_html) {
     }
   })
   
-  if (res.status === 200) log(`...successfully updated corresponding page in store`)
+  if (res.status === 200) log(`<=> [${getTime()}]`.white, `success!`.green, `updated corresponding page in store`.white)
 }
 
-async function processFile(file) {
+const processFile = async (file) => {
   try {
     const html = await fs.readFile(file, 'utf8')
     const pageId = await getPageId(file.split('.')[0])
     await updatePage(pageId, html)
+    log(`*** [${getTime()}] watching`.white, process.cwd().cyan.bold, `for updates ***`.white)
   } catch (err) {
     console.error(err)
   }
 }
+
+watcher
+  .on('ready', () => {
+    log(`<=> <=> <=> SHOPIFY PAGE UPDATE <=> <=> <=>`.blue.bold.italic)
+    log(`*** [${getTime()}] watching`.white, process.cwd().cyan.bold, `for updates ***`.white)
+  })
+  .on('error', error => log(`[${getTime()}] Watcher error: ${error}`.red))
+  .on('change', file => {
+    log(`<=> [${getTime()}]`.white, file.yellow, `has changed`.white)
+    processFile(file)
+  })
